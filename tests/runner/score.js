@@ -13,47 +13,59 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { execSync } from 'node:child_process';
+import crypto from 'node:crypto';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const testsDir = path.resolve(__dirname, '..');
 const resultsDir = path.join(testsDir, 'results');
-const repoRoot = path.resolve(testsDir, '..');
+const groundTruthDir = path.join(testsDir, 'ground-truth');
 
 // ---------------------------------------------------------------------------
 // Load data
 // ---------------------------------------------------------------------------
 
-// Ground truth lives ONLY on 'ground-truth-sealed' branch.
-// This prevents AI agents from reading answers during review.
+// Ground truth is AES-256-GCM encrypted.
+// AI agents cannot read the answers even if they have full repo access.
+// Only the scoring step (run by a human) provides the SCORE_KEY.
 function loadGroundTruth() {
-  const SEALED_BRANCH = 'ground-truth-sealed';
-  const GT_FILES = [
-    'tests/ground-truth/project-1.json',
-    'tests/ground-truth/project-2.json',
-    'tests/ground-truth/project-3.json',
-    'tests/ground-truth/project-4.json',
-    'tests/ground-truth/project-5.json',
-  ];
+  const password = process.env.SCORE_KEY;
+  if (!password) {
+    console.error('ERROR: Set SCORE_KEY env var to decrypt ground truth.');
+    console.error('Usage: SCORE_KEY=<password> node tests/runner/score.js');
+    process.exit(1);
+  }
+
+  function decrypt(buffer, password) {
+    const salt = buffer.subarray(0, 16);
+    const iv = buffer.subarray(16, 28);
+    const tag = buffer.subarray(28, 44);
+    const ciphertext = buffer.subarray(44);
+    const key = crypto.scryptSync(password, salt, 32);
+    const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv);
+    decipher.setAuthTag(tag);
+    return decipher.update(ciphertext, null, 'utf8') + decipher.final('utf8');
+  }
+
+  const files = fs.readdirSync(groundTruthDir).filter(f => f.endsWith('.enc'));
+  if (files.length === 0) {
+    console.error('No .enc files found in tests/ground-truth/');
+    process.exit(1);
+  }
 
   const truth = {};
-  for (const file of GT_FILES) {
+  for (const file of files) {
     try {
-      const content = execSync(`git show ${SEALED_BRANCH}:${file}`, {
-        cwd: repoRoot,
-        encoding: 'utf8',
-        stdio: ['pipe', 'pipe', 'pipe'],
-      });
-      const data = JSON.parse(content);
+      const encrypted = fs.readFileSync(path.join(groundTruthDir, file));
+      const json = decrypt(encrypted, password);
+      const data = JSON.parse(json);
       truth[data.project] = data;
     } catch (err) {
-      console.error(`Failed to load ${file} from branch '${SEALED_BRANCH}'`);
-      console.error('Make sure you have fetched the sealed branch: git fetch origin ground-truth-sealed');
+      console.error(`Failed to decrypt ${file} — wrong SCORE_KEY?`);
       process.exit(1);
     }
   }
-  console.log(`Loaded ground truth from '${SEALED_BRANCH}' branch (${Object.keys(truth).length} projects)`);
+  console.log(`Decrypted ground truth: ${Object.keys(truth).length} projects`);
   return truth;
 }
 
