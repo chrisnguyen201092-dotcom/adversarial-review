@@ -13,24 +13,47 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { execSync } from 'node:child_process';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const testsDir = path.resolve(__dirname, '..');
 const resultsDir = path.join(testsDir, 'results');
-const groundTruthDir = path.join(testsDir, 'ground-truth');
+const repoRoot = path.resolve(testsDir, '..');
 
 // ---------------------------------------------------------------------------
 // Load data
 // ---------------------------------------------------------------------------
 
+// Ground truth lives ONLY on 'ground-truth-sealed' branch.
+// This prevents AI agents from reading answers during review.
 function loadGroundTruth() {
-  const files = fs.readdirSync(groundTruthDir).filter(f => f.endsWith('.json'));
+  const SEALED_BRANCH = 'ground-truth-sealed';
+  const GT_FILES = [
+    'tests/ground-truth/project-1.json',
+    'tests/ground-truth/project-2.json',
+    'tests/ground-truth/project-3.json',
+    'tests/ground-truth/project-4.json',
+    'tests/ground-truth/project-5.json',
+  ];
+
   const truth = {};
-  for (const file of files) {
-    const data = JSON.parse(fs.readFileSync(path.join(groundTruthDir, file), 'utf8'));
-    truth[data.project] = data;
+  for (const file of GT_FILES) {
+    try {
+      const content = execSync(`git show ${SEALED_BRANCH}:${file}`, {
+        cwd: repoRoot,
+        encoding: 'utf8',
+        stdio: ['pipe', 'pipe', 'pipe'],
+      });
+      const data = JSON.parse(content);
+      truth[data.project] = data;
+    } catch (err) {
+      console.error(`Failed to load ${file} from branch '${SEALED_BRANCH}'`);
+      console.error('Make sure you have fetched the sealed branch: git fetch origin ground-truth-sealed');
+      process.exit(1);
+    }
   }
+  console.log(`Loaded ground truth from '${SEALED_BRANCH}' branch (${Object.keys(truth).length} projects)`);
   return truth;
 }
 
