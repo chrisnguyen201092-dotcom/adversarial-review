@@ -1,0 +1,19 @@
+{
+  "name": "adversarial-review",
+  "version": "1.0.0",
+  "description": "Multi-agent adversarial review with scored finder/adversary/referee pattern",
+  "skills": [
+    "adversarial-code-review",
+    "adversarial-plan-review",
+    "adversarial-security-review",
+    "adversarial-content-review"
+  ],
+  "core_skills": [
+    "adversarial-code-review",
+    "adversarial-plan-review"
+  ],
+  "full_skills": [
+    "adversarial-security-review",
+    "adversarial-content-review"
+  ]
+}

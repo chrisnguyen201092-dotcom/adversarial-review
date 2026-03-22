@@ -1,0 +1,140 @@
+---
+name: adversarial-code-review
+description: >
+  Multi-agent adversarial code review using scored finder/adversary/referee
+  pattern. Exploits sycophancy by giving each agent opposing incentives.
+  Triggers on: "adversarial review", "adversarial audit",
+  "/adversarial-code-review", "find all bugs", "deep review",
+  "three-agent review", "scored review", "find issues in",
+  or when the user wants high-fidelity issue detection in code.
+  Takes a target (file path, directory, or description) as argument.
+  Optional second argument: auto (default), self, or combine.
+argument-hint: "<file, directory, or description> [auto|self|combine]"
+allowed-tools:
+  - Bash
+  - Read
+  - Glob
+  - Grep
+  - Write
+  - Edit
+  - Agent
+  - AskUserQuestion
+user-invocable: true
+---
+
+# Adversarial Code Review — Scored Multi-Agent Verification
+
+Spawns agents with opposing incentives to produce high-fidelity issue detection.
+Exploits the sycophancy limitation — each agent WANTS to please, so you give
+them contradictory goals. The intersection of their outputs is close to ground truth.
+
+## Arguments
+
+`$ARGUMENTS` = what to review + optional mode override. Can be:
+- A file path (`src/auth/middleware.ts`)
+- A directory (`src/auth/`)
+- A description ("the payment flow I just built")
+- A vague pointer ("this folder", "what I just changed") — resolve from context
+- Optional mode: `auto` (default), `self` (single model only), `combine` (force dual-model)
+
+If `$ARGUMENTS` is empty and you can't resolve from context, use AskUserQuestion.
+Try to resolve first: `git diff --name-only HEAD~1` or `ls` the cwd.
+
+## Mode Detection
+
+Parse the last word of `$ARGUMENTS`:
+- If `self` → self mode, strip from arguments
+- If `combine` → combined mode, strip from arguments
+- Otherwise → auto mode
+
+**Auto mode logic:**
+1. Check if Codex CLI exists: run `which codex 2>/dev/null || where codex 2>nul`
+2. If found → combined mode (log: "✓ Codex CLI detected — running dual-finder mode")
+3. If not found → self mode (log: "ℹ Codex CLI not found — running self-adversarial mode")
+
+## Process
+
+Read `references/prompts.md` for full prompt templates.
+Read `references/scoring.md` for scoring values.
+Read `references/output-format.md` for output format.
+
+### Phase 1: Scope the Review
+
+1. **Identify target files** — use `ls`, `find`, `git diff --name-only`. Build a
+   file list. Don't read the files yourself — pass the list to sub-agents.
+2. **Determine review type** — this is code review. Use the Code Review variant
+   from prompts.md.
+3. **Measure total LOC** — run `wc -l` on all target files. This determines
+   single vs parallel Finder mode.
+
+| Total LOC | Mode |
+|-----------|------|
+| < 1500 | Single Finder |
+| >= 1500 | Parallel Finders (MECE decomposition) |
+
+### Phase 2: Spawn Finder(s)
+
+**Self mode (single model):**
+- LOC < 1500 → spawn 1 Finder agent with the Finder prompt
+- LOC >= 1500 → MECE decompose files into chunks, spawn N parallel Finder
+  agents + 1 cross-cutting agent. Merge reports after all complete.
+
+**Combined mode (dual model):**
+- Same as self mode, PLUS spawn an additional Codex Finder in parallel.
+- Run Codex via: `bash -c "echo '{finder_prompt}' | {{RUNNER_PATH}} review"`
+  (or equivalent Codex CLI invocation)
+- Merge all Finder reports (Claude + Codex) before proceeding.
+
+### Phase 3: Spawn the Adversary
+
+Launch ONE agent (same model as the host) with the Adversary prompt.
+- Input: merged Finder report + target file list
+- The Adversary challenges ALL findings regardless of which Finder found them
+
+### Phase 4: Spawn the Referee
+
+Launch ONE agent (best available model) with the Referee prompt.
+- Input: Finder report + Adversary report + target file list
+- Output: confirmed real issues only, with final severity
+
+### Phase 5: Spawn the Synthesizer (optional)
+
+Only for code reviews (not plan/content). Launch ONE agent with Synthesizer prompt.
+- Input: Referee's confirmed issues + target file list
+- Output: code fixes + any new issues found
+
+### Phase 6: Present Results
+
+Format output per `references/output-format.md`.
+Present the Markdown report to the user.
+
+### Phase 7: Apply Fixes
+
+If Synthesizer ran:
+- Ask: "Want me to apply these fixes?"
+- If yes, apply the diffs
+- If some but not all, let the user pick
+
+## Agent Spawning
+
+All agents spawn as sub-agents using the Agent tool with fresh context.
+
+| Role | Priority | Why |
+|------|----------|-----|
+| Finder | Best available | Thorough code reading |
+| Adversary | Best available | Strong reasoning to challenge claims |
+| Referee | Best available | Precise calibration between both sides |
+| Synthesizer | Best available | Code writing + Edit tool access |
+
+### Rules
+- Finder → Adversary → Referee → Synthesizer: always sequential
+- Fresh context per agent — don't chain them
+- Don't read target files yourself — delegate to sub-agents
+- Synthesizer is for code reviews only
+
+## When NOT to Use This
+
+- Simple typo fixes — just fix them
+- Single-file changes with obvious correctness — regular review is fine
+- Time-sensitive work — takes ~5-10 minutes
+- Work you're going to manually review anyway

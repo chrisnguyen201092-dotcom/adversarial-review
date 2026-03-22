@@ -1,0 +1,35 @@
+---
+description: >
+  Adversarial review for implementation plans and designs BEFORE coding.
+  Run with: /adversarial-plan-review <plan document> [auto|self|combine]
+---
+
+# Adversarial Plan Review — Antigravity Workflow
+
+Same adversarial pattern as code review, tuned for plans. Catches gaps,
+unrealistic assumptions, and missing edge cases BEFORE any code is written.
+
+## Steps
+
+### Step 1: Read the plan document
+Identify and read the target plan/design document.
+
+### Step 2: Finder Phase
+Use the Finder prompt from `references/prompts.md` with Plan Review variant.
+Look for: gaps, unrealistic assumptions, missing edge cases, scalability
+concerns, security implications, ambiguous specs.
+
+### Step 3: Adversary Phase
+Challenge each finding: "Is this gap actually a problem given the project's
+scope and goals?" 2x penalty for wrong disproves.
+
+### Step 4: Referee Phase
+Final verdict on each finding. No Synthesizer — plans don't need code fixes.
+
+### Step 5: Present Results
+Format per `references/output-format.md`.
+
+## References
+- [prompts.md](../adversarial-code-review/references/prompts.md)
+- [scoring.md](../adversarial-code-review/references/scoring.md)
+- [output-format.md](../adversarial-code-review/references/output-format.md)

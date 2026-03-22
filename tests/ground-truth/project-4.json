@@ -1,0 +1,105 @@
+{
+  "project": "project-4-data-pipeline",
+  "total_bugs": 9,
+  "bugs": [
+    {
+      "id": "P4-B01",
+      "file": "pipeline.js",
+      "line_start": 27,
+      "line_end": 27,
+      "category": "security",
+      "severity": "CRITICAL",
+      "difficulty": "medium",
+      "title": "SQL injection via tableName parameter",
+      "description": "tableName is interpolated directly into SQL query — attacker-controlled table name enables injection"
+    },
+    {
+      "id": "P4-B02",
+      "file": "pipeline.js",
+      "line_start": 36,
+      "line_end": 38,
+      "category": "security",
+      "severity": "CRITICAL",
+      "difficulty": "medium",
+      "title": "SQL injection via where and columns in exportCsv",
+      "description": "where clause and columns array interpolated into SQL without parameterization"
+    },
+    {
+      "id": "P4-B03",
+      "file": "pipeline.js",
+      "line_start": 7,
+      "line_end": 7,
+      "category": "performance",
+      "severity": "MEDIUM",
+      "difficulty": "easy",
+      "title": "Entire file read into memory synchronously",
+      "description": "fs.readFileSync loads entire CSV into memory — fails on large files"
+    },
+    {
+      "id": "P4-B04",
+      "file": "pipeline.js",
+      "line_start": 52,
+      "line_end": 52,
+      "category": "error-handling",
+      "severity": "MEDIUM",
+      "difficulty": "medium",
+      "title": "Scheduler swallows errors silently",
+      "description": "Failed jobs only console.log the error — no retry, no alert, no status tracking"
+    },
+    {
+      "id": "P4-B05",
+      "file": "pipeline.js",
+      "line_start": 46,
+      "line_end": 46,
+      "category": "resource",
+      "severity": "MEDIUM",
+      "difficulty": "hard",
+      "title": "setInterval never cleared — resource leak",
+      "description": "Intervals created in processScheduled are never stopped — no cleanup mechanism"
+    },
+    {
+      "id": "P4-B06",
+      "file": "pipeline.js",
+      "line_start": 20,
+      "line_end": 26,
+      "category": "data-integrity",
+      "severity": "CRITICAL",
+      "difficulty": "hard",
+      "title": "Partial import on failure — no transaction",
+      "description": "Records inserted one-by-one without transaction — failure mid-import leaves partial data"
+    },
+    {
+      "id": "P4-B07",
+      "file": "lib/transform.js",
+      "line_start": 7,
+      "line_end": 7,
+      "category": "data-integrity",
+      "severity": "LOW",
+      "difficulty": "hard",
+      "title": "Floating point arithmetic on currency",
+      "description": "Tax calculation uses floating point: 0.1 * 100 can produce rounding errors in financial data"
+    },
+    {
+      "id": "P4-B08",
+      "file": "lib/transform.js",
+      "line_start": 13,
+      "line_end": 13,
+      "category": "error-handling",
+      "severity": "MEDIUM",
+      "difficulty": "medium",
+      "title": "Missing currency rate causes TypeError crash",
+      "description": "Accessing rates[currency] when currency not in rates map returns undefined, multiplication = NaN silently corrupts data"
+    },
+    {
+      "id": "P4-B09",
+      "file": "pipeline.js",
+      "line_start": 62,
+      "line_end": 62,
+      "category": "data-integrity",
+      "severity": "LOW",
+      "difficulty": "hard",
+      "title": "mergeCsvFiles reads without encoding spec",
+      "description": "readFileSync without explicit encoding returns Buffer — parse may mishandle non-UTF8 files"
+    }
+  ]
+}

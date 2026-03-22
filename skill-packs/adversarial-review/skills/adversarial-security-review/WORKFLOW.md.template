@@ -1,0 +1,39 @@
+---
+description: >
+  Security-focused adversarial review with OWASP Top 10 and CWE patterns.
+  Run with: /adversarial-security-review <target> [auto|self|combine]
+---
+
+# Adversarial Security Review — Antigravity Workflow
+
+Adversarial review tuned for security. Higher Finder rewards (+2/+10/+20)
+and 3x Adversary penalty to ensure nothing is missed.
+
+## Steps
+
+### Step 1: Scope
+Identify target files. Read security-specific prompts from references.
+
+### Step 2: Finder Phase
+Use Security Review variant prompts. Check OWASP Top 10 2021 + CWE patterns.
+Include hardcoded secrets scan.
+
+If combined mode: also run Codex CLI with security-focused prompt.
+
+### Step 3: Adversary Phase
+Challenge findings with 3x penalty for wrong disproves (security audit tuning).
+
+### Step 4: Referee Phase
+Final verdict. Each confirmed finding must include CWE reference and
+attack vector explanation.
+
+### Step 5: Synthesizer Phase
+Generate security fixes for confirmed issues.
+
+### Step 6: Present Results
+Format per output-format.md. Include CWE/OWASP references.
+
+## References
+- [prompts.md](../adversarial-code-review/references/prompts.md)
+- [scoring.md](../adversarial-code-review/references/scoring.md)
+- [output-format.md](../adversarial-code-review/references/output-format.md)

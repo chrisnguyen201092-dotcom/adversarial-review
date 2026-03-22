@@ -1,0 +1,71 @@
+---
+name: adversarial-plan-review
+description: >
+  Adversarial review for implementation plans and designs BEFORE coding.
+  Catches gaps, unrealistic assumptions, and missing edge cases at the
+  cheapest possible stage — before any code is written.
+  Triggers on: "review this plan", "adversarial plan review",
+  "/adversarial-plan-review", "check my design", "review my proposal",
+  "find gaps in this plan".
+  Takes a plan document or description as argument.
+  Optional second argument: auto (default), self, or combine.
+argument-hint: "<plan file, document, or description> [auto|self|combine]"
+allowed-tools:
+  - Bash
+  - Read
+  - Glob
+  - Grep
+  - Write
+  - Edit
+  - Agent
+  - AskUserQuestion
+user-invocable: true
+---
+
+# Adversarial Plan Review — Catch Flaws Before Coding
+
+Same adversarial pattern as code review, but tuned for plans and designs.
+The ROI is highest here — catching a gap in a plan prevents days of wasted code.
+
+## Arguments
+
+`$ARGUMENTS` = plan to review + optional mode override.
+- A file path (`docs/implementation-plan.md`)
+- A description ("the auth redesign plan we discussed")
+- Optional mode: `auto` (default), `self`, `combine`
+
+If empty, check for recent markdown files or ask the user.
+
+## Mode Detection
+
+Same as adversarial-code-review. See that skill for details.
+
+## Process
+
+Same 6-phase pipeline as adversarial-code-review, with these differences:
+
+### Differences from Code Review
+
+1. **Review type** = `plan` (use Plan Review variant from `references/prompts.md`)
+2. **No LOC-based splitting** — plans are usually single documents, no MECE needed
+3. **No Synthesizer phase** — plans don't need code fixes, just verdict
+4. **Finder looks for**: gaps, unrealistic assumptions, missing edge cases,
+   scalability concerns, security implications, ambiguous specs
+5. **Scoring**: same as default (+1/+5/+10, Adversary 2x penalty)
+
+### Phase Flow
+
+```
+Phase 1: Read the plan document
+Phase 2: Finder — find every gap and risk
+Phase 3: Adversary — challenge each finding
+Phase 4: Referee — final verdict
+Phase 5: Present report (no Synthesizer)
+```
+
+## References
+
+Same references as adversarial-code-review:
+- `../adversarial-code-review/references/prompts.md`
+- `../adversarial-code-review/references/scoring.md`
+- `../adversarial-code-review/references/output-format.md`

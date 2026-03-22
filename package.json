@@ -1,0 +1,27 @@
+{
+  "name": "adversarial-review",
+  "version": "1.0.0",
+  "description": "Cross-platform adversarial code review skill pack for AI coding tools",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "bin": {
+    "adversarial-review": "./bin/install.js"
+  },
+  "files": [
+    "bin/",
+    "skill-packs/"
+  ],
+  "keywords": [
+    "claude-code",
+    "opencode",
+    "codex",
+    "kilo-code",
+    "antigravity",
+    "adversarial-review",
+    "code-review",
+    "ai-skills"
+  ]
+}

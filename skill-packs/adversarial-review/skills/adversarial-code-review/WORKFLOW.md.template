@@ -1,0 +1,61 @@
+---
+description: >
+  Multi-agent adversarial code review using scored finder/adversary/referee
+  pattern. Run with: /adversarial-code-review <target> [auto|self|combine]
+---
+
+# Adversarial Code Review — Antigravity Workflow
+
+This workflow implements the adversarial review pattern using sequential
+prompting. Since Antigravity doesn't have a native sub-agent system like
+Claude Code's Agent tool, each phase runs as a sequential step.
+
+## Arguments
+
+`$ARGUMENTS` = what to review + optional mode override.
+- File path, directory, or description
+- Optional mode: `auto` (default), `self`, `combine`
+
+## Mode Detection
+
+1. Parse last word of `$ARGUMENTS` for mode override (`self` / `combine`)
+2. For auto mode: run `which codex 2>/dev/null || where codex 2>nul`
+3. Codex found → combined mode; not found → self mode
+
+## Steps
+
+### Step 1: Scope
+- Identify target files using file system tools
+- Count total LOC to determine single vs parallel Finder mode
+- Read `references/prompts.md` for prompt templates
+- Read `references/scoring.md` for scoring values
+
+### Step 2: Finder Phase
+Run the Finder prompt from `references/prompts.md` against the target files.
+Apply the Code Review variant. The Finder should read all target files and
+produce a scored issue report.
+
+If combined mode: also run `codex` CLI with the same Finder prompt and
+merge both reports.
+
+### Step 3: Adversary Phase
+Run the Adversary prompt with the Finder report and target files.
+The Adversary attempts to disprove each finding with 2x penalty for
+wrong disproves.
+
+### Step 4: Referee Phase
+Run the Referee prompt with both reports and target files.
+The Referee determines final verdicts: REAL ISSUE or FALSE POSITIVE.
+
+### Step 5: Synthesizer Phase (code reviews only)
+Run the Synthesizer prompt to generate fixes for confirmed issues
+and catch anything everyone missed.
+
+### Step 6: Present Results
+Format output per `references/output-format.md`.
+Ask user if they want to apply fixes.
+
+## References
+- [prompts.md](./references/prompts.md) — Agent prompt templates
+- [scoring.md](./references/scoring.md) — Scoring rules and tuning
+- [output-format.md](./references/output-format.md) — Output format specs

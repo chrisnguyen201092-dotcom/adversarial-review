@@ -1,0 +1,79 @@
+---
+name: adversarial-security-review
+description: >
+  Security-focused adversarial review with OWASP Top 10 and CWE pattern
+  detection. Tuned scoring: higher Finder rewards (+2/+10/+20) and 3x
+  Adversary penalty to ensure nothing is missed.
+  Triggers on: "security review", "adversarial security review",
+  "/adversarial-security-review", "security audit", "find vulnerabilities",
+  "check for security issues", "OWASP review".
+  Takes a file path, directory, or description as argument.
+  Optional second argument: auto (default), self, or combine.
+argument-hint: "<file, directory, or description> [auto|self|combine]"
+allowed-tools:
+  - Bash
+  - Read
+  - Glob
+  - Grep
+  - Write
+  - Edit
+  - Agent
+  - AskUserQuestion
+user-invocable: true
+---
+
+# Adversarial Security Review — Miss Nothing
+
+Same adversarial pipeline but tuned for security. Higher Finder rewards
+incentivize thorough hunting. 3x Adversary penalty makes disproval costly —
+keeping more borderline findings alive for the Referee to judge.
+
+## Arguments
+
+`$ARGUMENTS` = what to audit + optional mode override.
+
+## Mode Detection
+
+Same as adversarial-code-review.
+
+## Process
+
+Same pipeline as adversarial-code-review with these differences:
+
+### Differences from Code Review
+
+1. **Review type** = `security` (use Security Review variant from prompts.md)
+2. **Scoring tuned for security**: Finder +2/+10/+20, Adversary 3x penalty
+3. **Finder prompt includes** OWASP Top 10 2021 checklist + CWE patterns
+4. **Output includes** CWE and OWASP references for each finding
+5. **SARIF output recommended** for CI/CD security gates
+6. **Synthesizer focuses** on security fixes specifically
+
+### OWASP Top 10 2021 Coverage
+
+The Finder checks for:
+- A01: Broken Access Control
+- A02: Cryptographic Failures
+- A03: Injection (SQL, XSS, command, LDAP)
+- A04: Insecure Design
+- A05: Security Misconfiguration
+- A06: Vulnerable and Outdated Components
+- A07: Identification and Authentication Failures
+- A08: Software and Data Integrity Failures
+- A09: Security Logging and Monitoring Failures
+- A10: Server-Side Request Forgery (SSRF)
+- Hardcoded secrets (passwords, API keys, tokens, private keys)
+
+### Attack Vector Explanations
+
+For each confirmed security finding, the report must include:
+- What the vulnerability is
+- How an attacker could exploit it (attack vector)
+- What the impact would be (data breach, privilege escalation, etc.)
+- Confidence level (high/medium/low)
+
+## References
+
+- `../adversarial-code-review/references/prompts.md` — base prompts + security variant
+- `../adversarial-code-review/references/scoring.md` — security tuning values
+- `../adversarial-code-review/references/output-format.md` — JSON/SARIF with CWE fields

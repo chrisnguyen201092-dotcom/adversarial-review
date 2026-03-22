@@ -1,0 +1,76 @@
+---
+name: adversarial-content-review
+description: >
+  Adversarial review for non-code content: documents, proposals,
+  deliverables, articles. Self mode only (Codex doesn't review content well).
+  Triggers on: "review this document", "adversarial content review",
+  "/adversarial-content-review", "review my proposal", "check my writing",
+  "review deliverable".
+  Takes a document path or description as argument.
+argument-hint: "<document file or description>"
+allowed-tools:
+  - Bash
+  - Read
+  - Glob
+  - Grep
+  - Write
+  - Edit
+  - Agent
+  - AskUserQuestion
+user-invocable: true
+---
+
+# Adversarial Content Review — High-Fidelity Document Review
+
+Same adversarial pattern for non-code content. Always runs in self mode —
+Codex is a code model and doesn't add value for content review.
+
+## Arguments
+
+`$ARGUMENTS` = document to review.
+- A file path (`docs/proposal.md`)
+- A description ("the consulting proposal for GridBank")
+- A vague pointer ("this document") — resolve from context
+
+No mode override — always self mode.
+
+## Process
+
+Same pipeline as adversarial-code-review with these differences:
+
+### Differences from Code Review
+
+1. **Review type** = `content` (use Content Review variant from prompts.md)
+2. **Always self mode** — no Codex involvement
+3. **No Synthesizer phase** — content fixes are subjective, just provide verdict
+4. **No MECE decomposition** — documents are usually single files
+5. **Scoring tuned for content**: Finder +1/+3/+5, Adversary 1.5x penalty
+   (less aggressive — don't over-edit content)
+
+### Phase Flow
+
+```
+Phase 1: Read the document
+Phase 2: Finder — find unclear writing, factual errors, gaps, inconsistencies
+Phase 3: Adversary — challenge each finding ("does this really matter to
+         the target audience?")
+Phase 4: Referee — final verdict
+Phase 5: Present report (no Synthesizer, no Codex)
+```
+
+### Finder Looks For
+
+- Unclear or ambiguous writing
+- Missing explanations for complex concepts
+- Factual errors or outdated information
+- Inconsistencies between sections
+- Weak hooks or poor structure
+- Missing audience context
+- Gaps in logical flow
+- Claims without evidence
+
+## References
+
+- `../adversarial-code-review/references/prompts.md` — base prompts + content variant
+- `../adversarial-code-review/references/scoring.md` — content tuning values
+- `../adversarial-code-review/references/output-format.md` — report format
